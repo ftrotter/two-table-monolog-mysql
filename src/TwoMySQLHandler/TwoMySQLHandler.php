@@ -1,6 +1,6 @@
 <?php
 
-namespace MySQLHandler;
+namespace TwoMySQLHandler;
 
 use Monolog\Logger;
 use Monolog\Handler\AbstractProcessingHandler;
@@ -9,12 +9,12 @@ use PDOStatement;
 
 /**
  * This class is a handler for Monolog, which can be used
- * to write records in a MySQL table
+ * to write records to two MySQL tables
  *
- * Class MySQLHandler
- * @package wazaari\MysqlHandler
+ * Class TwoMySQLHandler
+ * @package ftrotter\TwoMysqlHandler
  */
-class MySQLHandler extends AbstractProcessingHandler
+class TwoMySQLHandler extends AbstractProcessingHandler
 {
 
     /**
@@ -33,14 +33,25 @@ class MySQLHandler extends AbstractProcessingHandler
     private $statement;
 
     /**
-     * @var string the table to store the logs in
+     * @var string the table to store the log messages
      */
-    private $table = 'logs';
+    private $message_table = 'log_message';
+	
+    /**
+     * @var string the table to store the log context
+     */
+    private $context_table = 'log_context';
+	
+    /**
+     * @var string the database to store the logs in
+     */
+    private $log_database = 'log_db';
+	
 
     /**
      * @var array default fields that are stored in db
      */
-    private $defaultfields = array('id', 'channel', 'level', 'message', 'time');
+    private $defaultfields = array('id', 'channel', 'level', 'message', '`'.$this->log_database.'`.time');
 
     /**
      * @var string[] additional fields to be stored in the database
@@ -68,7 +79,9 @@ class MySQLHandler extends AbstractProcessingHandler
      */
     public function __construct(
         PDO $pdo = null,
-        $table,
+	$log_db
+        $message_table,
+	$context_table,
         $additionalFields = array(),
         $level = Logger::DEBUG,
         $bubble = true
@@ -76,7 +89,9 @@ class MySQLHandler extends AbstractProcessingHandler
        if (!is_null($pdo)) {
             $this->pdo = $pdo;
         }
-        $this->table = $table;
+        $this->message_table = $message_table;
+        $this->context_table = $context_table;
+        $this->log_databaes = $log_db;
         $this->additionalFields = $additionalFields;
         parent::__construct($level, $bubble);
     }
@@ -87,13 +102,18 @@ class MySQLHandler extends AbstractProcessingHandler
     private function initialize()
     {
         $this->pdo->exec(
-            'CREATE TABLE IF NOT EXISTS `'.$this->table.'` '
+            'CREATE TABLE IF NOT EXISTS `'.$this->log_database.'`.`'.$this->message_table.'` '
             .'(id BIGINT(20) NOT NULL AUTO_INCREMENT PRIMARY KEY, channel VARCHAR(255), level INTEGER, message LONGTEXT, time INTEGER UNSIGNED, INDEX(channel) USING HASH, INDEX(level) USING HASH, INDEX(time) USING BTREE)'
+        );
+
+        $this->pdo->exec(
+            'CREATE TABLE IF NOT EXISTS `'.$this->log_database.'`.`'.$this->context_table.'` '
+            .'(id BIGINT(20) NOT NULL AUTO_INCREMENT PRIMARY KEY, message_id BIGINT(20), channel VARCHAR(255), level INTEGER, message LONGTEXT, time INTEGER UNSIGNED, INDEX(channel) USING HASH, INDEX(level) USING HASH, INDEX(time) USING BTREE)'
         );
 
         //Read out actual columns
         $actualFields = array();
-        $rs = $this->pdo->query('SELECT * FROM `'.$this->table.'` LIMIT 0');
+        $rs = $this->pdo->query('SELECT * FROM `'.$this->message_table.'` LIMIT 0');
         for ($i = 0; $i < $rs->columnCount(); $i++) {
             $col = $rs->getColumnMeta($i);
             $actualFields[] = $col['name'];
@@ -110,14 +130,14 @@ class MySQLHandler extends AbstractProcessingHandler
         //Remove columns
         if (!empty($removedColumns)) {
             foreach ($removedColumns as $c) {
-                $this->pdo->exec('ALTER TABLE `'.$this->table.'` DROP `'.$c.'`;');
+                $this->pdo->exec('ALTER TABLE `'.$this->log_database.'`.`'.$this->message_table.'` DROP `'.$c.'`;');
             }
         }
 
         //Add columns
         if (!empty($addedColumns)) {
             foreach ($addedColumns as $c) {
-                $this->pdo->exec('ALTER TABLE `'.$this->table.'` add `'.$c.'` TEXT NULL DEFAULT NULL;');
+                $this->pdo->exec('ALTER TABLE `'.$this->log_database.'`.`'.$this->message_table.'` add `'.$c.'` TEXT NULL DEFAULT NULL;');
             }
         }
 
@@ -150,7 +170,7 @@ class MySQLHandler extends AbstractProcessingHandler
         }
 
         $this->statement = $this->pdo->prepare(
-            'INSERT INTO `' . $this->table . '` (' . $columns . ') VALUES (' . $fields . ')'
+            'INSERT INTO `'.$this->log_database.'`.`' . $this->message_table . '` (' . $columns . ') VALUES (' . $fields . ')'
         );
     }
 
