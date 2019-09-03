@@ -79,7 +79,7 @@ class TwoMySQLHandler extends AbstractProcessingHandler
      */
     public function __construct(
         PDO $pdo = null,
-	$log_db
+	$log_db,
         $message_table,
 	$context_table,
         $additionalFields = array(),
