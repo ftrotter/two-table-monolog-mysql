@@ -28,10 +28,10 @@ Given that $pdo is your database instance, you could use the class as follows:
 
 ```php
 //Import class
-use MySQLHandler\MySQLHandler;
+use TwoMySQLHandler\TwoMySQLHandler;
 
 //Create MysqlHandler
-$mySQLHandler = new MySQLHandler($pdo,"log_db", "log_message", "log_context", array('username', 'userid'), \Monolog\Logger::DEBUG);
+$mySQLHandler = new TwoMySQLHandler($pdo,"log_db", "log_message", "log_context", array('username', 'userid'), \Monolog\Logger::DEBUG);
 
 $context = ['not_sure', 'what_goes_here']; //not clear to me how this works
 
