@@ -1,10 +1,14 @@
 {
-    "name": "wazaari/monolog-mysql",
-    "description": "A handler for Monolog that sends messages to MySQL",
-    "keywords": ["log", "logging", "monolog", "mysql", "database"],
-    "homepage": "https://github.com/waza-ari/monolog-mysql",
+    "name": "ftrotter/two-table-monolog-mysql",
+    "description": "A handler for Monolog that sends messages to MariaDB (or MySQL), split between two tables",
+    "keywords": ["log", "logging", "monolog", "mysql", "mariadb", "database"],
+    "homepage": "https://github.com/ftrotter/two-table-monolog-mysql",
     "license": "MIT",
     "authors": [
+        {
+            "name": "Fred Trotter",
+            "email": "fred.trotter@gmail.com"
+        },
         {
             "name": "Daniel Herrmann",
             "email": "daniel.herrmann1@gmail.com"
@@ -15,6 +19,6 @@
         "ext-pdo_mysql": "*"
     },
     "autoload": {
-        "psr-4": {"MySQLHandler\\": "src/MySQLHandler"}
+        "psr-4": {"TwoMySQLHandler\\": "src/TwoMySQLHandler"}
     }
 }
