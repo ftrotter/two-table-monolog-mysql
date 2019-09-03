@@ -1,27 +1,25 @@
-monolog-mysql
+two-table-monolog-mysql
 =============
 
-MySQL Handler for Monolog, which allows to store log messages in a MySQL Table.
-It can log text messages to a specific table, and creates the table automatically if it does not exist.
-The class further allows to dynamically add extra attributes, which are stored in a separate database field, and can be used for later analyzing and sorting.
+This is a fork of the monolog-mysql project to implement two important features that I need: 
 
-# HELP WANTED
-
-As I do not use this project myself anymore and I do not find the time to maintain this project as it deserves I would be happy to find someone taking it over. Please contact me at danielherrmann+gitlab@posteo.de if you'd be interesting to take over that project. Thanks!
+* Specify the database, and not just the table(s) on setup. 
+* Logs to two different tables, one for the messages and another for the context arrays.
 
 # Installation
 monolog-mysql is available via composer. Just add the following line to your required section in composer.json and do a `php composer.phar update`.
 
 ```
-"wazaari/monolog-mysql": ">1.0.0"
+"ftrotter/two-table-monolog-mysql": ">0.0.1"
 ```
 
 # Usage
 Just use it as any other Monolog Handler, push it to the stack of your Monolog Logger instance. The Handler however needs some parameters:
 
 - **$pdo** PDO Instance of your database. Pass along the PDO instantiation of your database connection with your database selected.
-- **$table** The table name where the logs should be stored
-- **$additionalFields** simple array of additional database fields, which should be stored in the database. The columns are created automatically, and the fields can later be used in the extra context section of a record. See examples below. _Defaults to an empty array()_
+- **$database** The name of the database where the logs should be stored
+- **$message_table** The table name where the message logs should be stored
+- **$context_table** The table name where the context logs should be stored
 - **$level** can be any of the standard Monolog logging levels. Use Monologs statically defined contexts. _Defaults to Logger::DEBUG_
 - **$bubble** _Defaults to true_
 
@@ -33,7 +31,9 @@ Given that $pdo is your database instance, you could use the class as follows:
 use MySQLHandler\MySQLHandler;
 
 //Create MysqlHandler
-$mySQLHandler = new MySQLHandler($pdo, "log", array('username', 'userid'), \Monolog\Logger::DEBUG);
+$mySQLHandler = new MySQLHandler($pdo,"log_db", "log_message", "log_context", array('username', 'userid'), \Monolog\Logger::DEBUG);
+
+$context = ['not_sure', 'what_goes_here']; //not clear to me how this works
 
 //Create logger
 $logger = new \Monolog\Logger($context);
